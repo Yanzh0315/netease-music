@@ -1,8 +1,10 @@
 import axios from "axios";
 
 const request = axios.create({
-    baseURL:'/api',
-    timeout:5000,
+    baseURL:import.meta.env.PROD
+    ? 'https://api-enhanced-production-9ca1.up.railway.app' // 👈 换成你刚拿到的域名
+    : '/api',
+    timeout:8000,
 })
 request.interceptors.response.use(
     (response) => response.data,
