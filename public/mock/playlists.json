@@ -1,0 +1,7 @@
+[
+  { "id": 1, "name": "华语流行精选", "cover": "https://picsum.photos/200/200?random=1", "playCount": 12500 },
+  { "id": 2, "name": "欧美经典老歌", "cover": "https://picsum.photos/200/200?random=2", "playCount": 8300 },
+  { "id": 3, "name": "轻音乐放松", "cover": "https://picsum.photos/200/200?random=3", "playCount": 21000 },
+  { "id": 4, "name": "摇滚现场", "cover": "https://picsum.photos/200/200?random=4", "playCount": 5600 },
+  { "id": 5, "name": "爵士乐", "cover": "https://picsum.photos/200/200?random=5", "playCount": 9800 }
+]
