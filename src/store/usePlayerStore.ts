@@ -16,6 +16,10 @@ interface PlayerState {
   currentSong: Song | null;   // 当前播放的歌曲
   isPlaying: boolean;         // 是否正在播放
   playList : Song[];          //播放列表
+  volume:number;              //音量
+  isMuted:boolean;            //是否静音              
+  setVolume:(vol:number)=>void //设置音量
+  toggleMute:()=>void;        //设置静音
   playSong: (song: Song) => void;    // 切歌方法
   togglePlay: () => void;            // 播放/暂停切换
   setPlaying: (playing: boolean) => void; // 强制设置播放状态
@@ -25,7 +29,7 @@ interface PlayerState {
   setNewUrl: (newInfo: { 
   audioUrl: string; 
   duration: number; 
-  trialEnd: number | null;   // 👈 加
+  trialEnd: number | null;  
   }) => void;
   removePlayList:(id:number)=>void;//删除歌曲队列中的某条数据
   removeAllPlayList:()=>void;//删除歌曲队列中的所有数据
@@ -39,7 +43,8 @@ export const usePlayerStore = create<PlayerState>()(
   currentSong: null,
   isPlaying: false,
   playList:[],
-
+  volume:0.5,
+  isMuted:true,
   // 方法：播放一首新歌,并把播放的歌曲放到队列
   playSong:(song)=>{
     set({ currentSong: song, isPlaying: true, }),
@@ -128,13 +133,17 @@ setPlayList:(playList)=>set(({
     playList:playList,
     currentSong:playList[0] ?? null,
     isPlaying:true,
-}))
+})),
+setVolume : (vol) => set({volume:vol,isMuted:vol === 0}),
+toggleMute:() => set((state)=>({isMuted : ! state.isMuted}))
 }),
 {
   name:'player-storage',
   partialize:(state)=>({
     currentSong:state.currentSong,
     playList:state.playList,
+    volume:state.volume,
+    isMuted:state.isMuted,
   })
 }
 ))

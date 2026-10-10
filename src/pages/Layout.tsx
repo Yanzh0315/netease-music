@@ -10,7 +10,7 @@ function Layout() {
       <Sidebar />
       <main className="ml-56 pt-16 pb-20 h-screen overflow-y-auto p-6">
         <Outlet />
-      </main>
+        </main>
       <PlayerBar />
     </div>
   );

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import request from "../api/request";
 import { usePlayerStore } from "../store/usePlayerStore";
 import {type Song} from '../store/usePlayerStore'
- import {handleImageError} from '../utils/imageErrorHandler'
+import {handleImageError} from '../utils/imageErrorHandler'
 interface SingInformation {
     name:string;//歌单名
     coverImgUrl:string;//封面图URL
@@ -21,6 +21,8 @@ export default function PlaylistDetail(){
     const [singInformation,setSingInformation] = useState<SingInformation|null>(null)
     const [playList,setPlaylist] = useState<Song[]>([])
     const currentSong = usePlayerStore((s)=>s.currentSong)
+        //添加歌曲到队列
+    const addSong = usePlayerStore.getState().addSong
     const formatTime = (seconds:number)=>{
     if(!seconds || isNaN(seconds)) return '00:00';
     const m = Math.floor(seconds/60).toString().padStart(2,'0');
@@ -95,8 +97,7 @@ export default function PlaylistDetail(){
             console.log('请求错误',err)
         }
     }
-    //添加歌曲到队列
-    const addSong = usePlayerStore.getState().addSong
+
   return (
     <div className="text-white">
         <button 

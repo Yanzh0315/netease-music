@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import request from '../api/request';
 import parseLRC, { type LyricLine } from '../utils/parseLRC';
@@ -15,12 +15,15 @@ export default function PlayerBar() {
   const prevSong = usePlayerStore((s) => s.prevSong);
   const removePlayList = usePlayerStore((s) => s.removePlayList);
   const removeAllPlayList = usePlayerStore((s) => s.removeAllPlayList);
-
+  const volume = usePlayerStore((s)=>s.volume)
+  const isMuted = usePlayerStore((s)=>s.isMuted)
+  const setVolume = usePlayerStore((s)=>s.setVolume)
   // ==================== UI 状态 ====================
   const [showQueue, setShowQueue] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [queueKeyword, setQueueKeyword] = useState('');
   const [showLyric, setShowLyric] = useState(false);
+  const [showVolume,setShowVolume] = useState(false)
 
   // ==================== 歌词状态 ====================
   const [parsed, setParsed] = useState<LyricLine[]>([]);
@@ -29,7 +32,11 @@ export default function PlayerBar() {
   // ==================== Refs ====================
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const progressContainerRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLAnchorElement>(null);
+  const isDranggingRef = useRef(false)
+  const volumeBarRef= useRef<HTMLDivElement>(null)
+  const isDranggingVolumeRef = useRef(false)
 
   // ==================== 工具函数 ====================
   const formatTime = (seconds: number) => {
@@ -47,7 +54,70 @@ export default function PlayerBar() {
           song.artist.toLowerCase().includes(queueKeyword.toLowerCase())
       )
     : playlist;
+    //拖拽音乐进度条
+  const handleMouseDown = (e:React.MouseEvent)=>{
+    if(!audioRef.current || !progressContainerRef.current || !audioRef.current.duration)return;
+    //获取进度条的长度
+    const rect = progressContainerRef.current.getBoundingClientRect();
+    //百分比
+    let percent = (e.clientX - rect.left)/rect.width
+    percent = Math.max(0,Math.min(1,percent));
+    if(progressRef.current) progressRef.current.style.width = `${percent * 100}&`;
+    audioRef.current.currentTime = percent * audioRef.current.duration;
 
+    isDranggingRef.current = true;
+    document.addEventListener('mousemove',handleMouseMove)
+    document.addEventListener('mouseup',handleMouseUp)
+  };
+
+  const handleMouseMove = (e:MouseEvent)=>{
+    if(!isDranggingRef.current || !audioRef.current || !progressContainerRef.current || !audioRef.current.duration) return;
+
+    const rect = progressContainerRef.current.getBoundingClientRect();
+     let percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+     if(progressRef.current)progressRef.current.style.width = `${percent * 100}%`;
+  };
+
+  const handleMouseUp = (e:MouseEvent)=>{
+    if(!isDranggingRef.current || !audioRef.current || !progressContainerRef.current || !audioRef.current.duration)return;
+    
+    isDranggingRef.current = false ; 
+    document.removeEventListener('mousemove',handleMouseMove);
+    document.removeEventListener('mouseup',handleMouseUp);
+  
+    const rect = progressContainerRef.current.getBoundingClientRect();
+    let percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = percent * audioRef.current.duration;
+  };
+    
+  //拖拽音量条
+  const calcVolume = (clientY : number)=>{
+    if(!volumeBarRef.current) return 0;
+    const rect = volumeBarRef.current.getBoundingClientRect();
+
+    let percent = (rect.bottom - clientY) / rect.height;
+    return Math.max(0,Math.min(1,percent));
+  }
+  //鼠标按下
+  const handleVolumeMouseDown = (e:React.MouseEvent)=>{
+    e.preventDefault();
+    isDranggingVolumeRef.current = true;
+    setVolume(calcVolume(e.clientY));
+
+    document.addEventListener('mousemove',handleVolumeMouseMove);
+    document.addEventListener('mouseup',handleVolumeMouseUp);
+  };
+  // 鼠标移动
+  const handleVolumeMouseMove = (e:MouseEvent)=>{
+    if(!isDranggingVolumeRef.current) return ;
+    setVolume(calcVolume(e.clientY))
+  };
+  //鼠标松开
+  const handleVolumeMouseUp = ()=>{
+    isDranggingVolumeRef.current = false;
+    document.removeEventListener('mousemove',handleVolumeMouseMove);
+    document.removeEventListener('mouseup',handleVolumeMouseUp);
+  }
   // ==================== Effect 1：请求 URL + 设置 src ====================
   useEffect(() => {
     if (!audioRef.current) return;
@@ -123,12 +193,23 @@ export default function PlayerBar() {
 
     getLyric();
   }, [currentSong?.id]);
+  // ==================== Effect 4：监听音量 ====================
+  useEffect(()=>{
+    if(audioRef.current){
+      audioRef.current.volume = volume;
+      audioRef.current.muted = isMuted;
+    }
+  },[volume,isMuted])
 
   // ==================== 渲染 ====================
   return (
     <footer className="fixed bottom-0 left-0 w-full h-20 bg-zinc-800 border-t border-zinc-700 z-50">
       {/* 进度条 */}
-      <div className="w-full h-1 bg-zinc-700 cursor-pointer">
+      <div 
+      className="w-full h-1 bg-zinc-700 cursor-pointer"
+      onMouseDown={handleMouseDown}
+      ref={progressContainerRef}
+      >
         <div
           ref={progressRef}
           className="h-full bg-blue-500"
@@ -187,6 +268,31 @@ export default function PlayerBar() {
             </button>
           </div>
 
+          {/* 音量按钮 */}
+          <div className="relative">
+            <button onClick={() => setShowVolume(!showVolume)}>🔊</button>
+            {showVolume && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-8 h-32 bg-zinc-800 rounded-lg flex flex-col items-center py-3">
+                {/* 音量条轨道 */}
+                <div 
+                  ref={volumeBarRef}
+                  onMouseDown={handleVolumeMouseDown}
+                  className="w-1 flex-1 bg-zinc-600 rounded cursor-pointer relative"
+                >
+                  <div 
+                    className="absolute bottom-0 w-full bg-blue-500 rounded"
+                    style={{ height: `${volume * 100}%` }}
+                  >
+                    {/* 圆形拖拽手柄 */}
+                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow" />
+                  </div>
+                </div>
+      {/* 百分比文字 */}
+                <span className="text-[10px] text-zinc-400 mt-2">{Math.round(volume * 100)}%</span>
+              </div>
+            )}
+          </div>
+
           {/* 右侧：队列按钮 */}
           <div className="flex-1 flex justify-end">
             <button
@@ -206,7 +312,6 @@ export default function PlayerBar() {
           <p className="text-zinc-500 text-sm">暂无播放</p>
         </div>
       )}
-
       {/* 播放队列弹窗 */}
       {showQueue && (
         <div className="absolute bottom-full right-6 mb-2 w-85 h-125 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl flex flex-col overflow-hidden">
@@ -378,6 +483,8 @@ export default function PlayerBar() {
         }}
         onTimeUpdate={(e) => {
           const audio = e.currentTarget;
+
+         if(isDranggingRef.current) return;
 
           // 进度条
           if (audio.duration) {
