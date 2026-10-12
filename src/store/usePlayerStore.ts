@@ -11,13 +11,16 @@ export interface Song {
   fee: number,
   trialEnd?:number | null,
 }
+export type PlayMode = 'order' | 'random' | 'loop';
 // 2. 定义 Store 的类型
 interface PlayerState {
   currentSong: Song | null;   // 当前播放的歌曲
   isPlaying: boolean;         // 是否正在播放
   playList : Song[];          //播放列表
   volume:number;              //音量
-  isMuted:boolean;            //是否静音              
+  isMuted:boolean;   //是否静音   
+  playbackRate:number;//音乐播放速率
+  playMode : PlayMode; //播放模式        
   setVolume:(vol:number)=>void //设置音量
   toggleMute:()=>void;        //设置静音
   playSong: (song: Song) => void;    // 切歌方法
@@ -34,6 +37,8 @@ interface PlayerState {
   removePlayList:(id:number)=>void;//删除歌曲队列中的某条数据
   removeAllPlayList:()=>void;//删除歌曲队列中的所有数据
   setPlayList:(playList : Song[]) => void;//替换队列数据
+  setPlaybackRate:(rate : number) => void; 
+  setPlayMode:(mode:PlayMode) => void;
 }
 // 3. 创建 store
 export const usePlayerStore = create<PlayerState>()(
@@ -45,6 +50,8 @@ export const usePlayerStore = create<PlayerState>()(
   playList:[],
   volume:0.5,
   isMuted:true,
+  playbackRate:1.0,
+  playMode:'order',
   // 方法：播放一首新歌,并把播放的歌曲放到队列
   playSong:(song)=>{
     set({ currentSong: song, isPlaying: true, }),
@@ -64,14 +71,28 @@ export const usePlayerStore = create<PlayerState>()(
   }),
   //下一首
   nextSong:()=>{
-    const {currentSong,playList} = get();    
+    const {currentSong,playList,playMode} = get();    
     if(!currentSong || playList.length === 0) return;
+
     const currentIndex  = playList.findIndex((song) => song.id === currentSong.id)
-    if(currentIndex === playList.length-1){
-      set(()=>({currentSong:playList[0]}))
+    if(currentIndex === -1) return;
+
+    //根据播放模式，实现顺序播放和随机播放
+    if(playMode === 'random'){
+      let randomIndex = currentIndex;
+      while(playList.length > 1 && randomIndex === currentIndex){
+        randomIndex = Math.floor(Math.random() * playList.length);
+      }
+      set({currentSong : playList[randomIndex], isPlaying : true})
+    } else {
+      if(currentIndex === playList.length-1){
+      set(()=>({currentSong:playList[0],isPlaying:true}))
     } else{
-      set(()=>({currentSong:playList[currentIndex+1]}))
+      set(()=>({currentSong:playList[currentIndex+1],isPlaying:true}))
     }
+    }
+
+
   },
   //上一首
   prevSong:()=>{
@@ -135,7 +156,9 @@ setPlayList:(playList)=>set(({
     isPlaying:true,
 })),
 setVolume : (vol) => set({volume:vol,isMuted:vol === 0}),
-toggleMute:() => set((state)=>({isMuted : ! state.isMuted}))
+toggleMute:() => set((state)=>({isMuted : ! state.isMuted})),
+setPlaybackRate:(rate)=>set({playbackRate:rate}),
+setPlayMode:(mode) => set({playMode : mode}),
 }),
 {
   name:'player-storage',
@@ -144,6 +167,7 @@ toggleMute:() => set((state)=>({isMuted : ! state.isMuted}))
     playList:state.playList,
     volume:state.volume,
     isMuted:state.isMuted,
+    playbackRate:state.playbackRate
   })
 }
 ))

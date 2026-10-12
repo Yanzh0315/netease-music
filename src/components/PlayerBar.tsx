@@ -4,7 +4,7 @@ import request from '../api/request';
 import parseLRC, { type LyricLine } from '../utils/parseLRC';
 import { handleImageError } from '../utils/imageErrorHandler';
 import LyricPanel from './LyricPanel';
-
+import {type PlayMode} from '../store/usePlayerStore'
 export default function PlayerBar() {
   // ==================== Store 订阅 ====================
   const currentSong = usePlayerStore((s) => s.currentSong);
@@ -15,15 +15,22 @@ export default function PlayerBar() {
   const prevSong = usePlayerStore((s) => s.prevSong);
   const removePlayList = usePlayerStore((s) => s.removePlayList);
   const removeAllPlayList = usePlayerStore((s) => s.removeAllPlayList);
-  const volume = usePlayerStore((s)=>s.volume)
-  const isMuted = usePlayerStore((s)=>s.isMuted)
-  const setVolume = usePlayerStore((s)=>s.setVolume)
+  const volume = usePlayerStore((s)=>s.volume);
+  const isMuted = usePlayerStore((s)=>s.isMuted);
+  const setVolume = usePlayerStore((s)=>s.setVolume);
+  const playbackRate = usePlayerStore((s)=>s.playbackRate);
+  const setPlaybackRate = usePlayerStore((s)=>s.setPlaybackRate);
+  const playMode = usePlayerStore((s)=>s.playMode);
+  const setPlayMode = usePlayerStore((s)=>s.setPlayMode);
+
   // ==================== UI 状态 ====================
   const [showQueue, setShowQueue] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [queueKeyword, setQueueKeyword] = useState('');
   const [showLyric, setShowLyric] = useState(false);
   const [showVolume,setShowVolume] = useState(false)
+  const [showRate,setShowRate] = useState(false);
+
 
   // ==================== 歌词状态 ====================
   const [parsed, setParsed] = useState<LyricLine[]>([]);
@@ -56,38 +63,38 @@ export default function PlayerBar() {
     : playlist;
     //拖拽音乐进度条
   const handleMouseDown = (e:React.MouseEvent)=>{
-    if(!audioRef.current || !progressContainerRef.current || !audioRef.current.duration)return;
-    //获取进度条的长度
+    if(!audioRef.current || !progressContainerRef.current || !progressRef.current) return;
     const rect = progressContainerRef.current.getBoundingClientRect();
-    //百分比
-    let percent = (e.clientX - rect.left)/rect.width
-    percent = Math.max(0,Math.min(1,percent));
-    if(progressRef.current) progressRef.current.style.width = `${percent * 100}&`;
+    const percent = Math.max(0,Math.min(1,(e.clientX - rect.left)/rect.width));
+    progressRef.current.style.width = `${percent * 100}%`;
     audioRef.current.currentTime = percent * audioRef.current.duration;
-
     isDranggingRef.current = true;
     document.addEventListener('mousemove',handleMouseMove)
     document.addEventListener('mouseup',handleMouseUp)
   };
 
   const handleMouseMove = (e:MouseEvent)=>{
-    if(!isDranggingRef.current || !audioRef.current || !progressContainerRef.current || !audioRef.current.duration) return;
+    if(!audioRef.current || !progressContainerRef.current || !progressRef.current) return;
 
     const rect = progressContainerRef.current.getBoundingClientRect();
-     let percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-     if(progressRef.current)progressRef.current.style.width = `${percent * 100}%`;
+    const percent = Math.max(0,Math.min(1,(e.clientX - rect.left)/rect.width));
+    progressRef.current.style.width = `${percent * 100}%`;
+
+
   };
 
   const handleMouseUp = (e:MouseEvent)=>{
-    if(!isDranggingRef.current || !audioRef.current || !progressContainerRef.current || !audioRef.current.duration)return;
-    
-    isDranggingRef.current = false ; 
-    document.removeEventListener('mousemove',handleMouseMove);
-    document.removeEventListener('mouseup',handleMouseUp);
-  
+    if(!audioRef.current || !progressContainerRef.current || !progressRef.current) return;
+
     const rect = progressContainerRef.current.getBoundingClientRect();
-    let percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const percent = Math.max(0,Math.min(1,(e.clientX - rect.left)/rect.width));
     audioRef.current.currentTime = percent * audioRef.current.duration;
+
+
+    isDranggingRef.current = false;
+    document.removeEventListener('mousemove',handleMouseMove);
+    document.removeEventListener('mouseup',handleMouseUp);   
+
   };
     
   //拖拽音量条
@@ -118,6 +125,13 @@ export default function PlayerBar() {
     document.removeEventListener('mousemove',handleVolumeMouseMove);
     document.removeEventListener('mouseup',handleVolumeMouseUp);
   }
+  //循环切换模式
+  const togglePlayMode = () => {
+  const modes: PlayMode[] = ['order', 'random', 'loop'];
+  const currentIndex = modes.indexOf(playMode);
+  const nextMode = modes[(currentIndex + 1) % modes.length];
+  setPlayMode(nextMode);
+};
   // ==================== Effect 1：请求 URL + 设置 src ====================
   useEffect(() => {
     if (!audioRef.current) return;
@@ -165,7 +179,6 @@ export default function PlayerBar() {
 
     getUrl();
   }, [currentSong?.id]);
-
   // ==================== Effect 2：播放/暂停 ====================
   useEffect(() => {
     if (!audioRef.current || !audioRef.current.src) return;
@@ -176,7 +189,6 @@ export default function PlayerBar() {
       audioRef.current.pause();
     }
   }, [isPlaying]);
-
   // ==================== Effect 3：请求歌词 ====================
   useEffect(() => {
     if (!currentSong) return;
@@ -200,6 +212,12 @@ export default function PlayerBar() {
       audioRef.current.muted = isMuted;
     }
   },[volume,isMuted])
+  // ==================== Effect 5：监听音乐播放速度 ====================
+  useEffect(()=>{
+    if(audioRef.current){
+      audioRef.current.playbackRate = playbackRate;
+    }
+  },[playbackRate,currentSong?.id])
 
   // ==================== 渲染 ====================
   return (
@@ -268,33 +286,85 @@ export default function PlayerBar() {
             </button>
           </div>
 
-          {/* 音量按钮 */}
-          <div className="relative">
-            <button onClick={() => setShowVolume(!showVolume)}>🔊</button>
-            {showVolume && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-8 h-32 bg-zinc-800 rounded-lg flex flex-col items-center py-3">
-                {/* 音量条轨道 */}
-                <div 
-                  ref={volumeBarRef}
-                  onMouseDown={handleVolumeMouseDown}
-                  className="w-1 flex-1 bg-zinc-600 rounded cursor-pointer relative"
-                >
-                  <div 
-                    className="absolute bottom-0 w-full bg-blue-500 rounded"
-                    style={{ height: `${volume * 100}%` }}
-                  >
-                    {/* 圆形拖拽手柄 */}
-                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow" />
-                  </div>
-                </div>
-      {/* 百分比文字 */}
-                <span className="text-[10px] text-zinc-400 mt-2">{Math.round(volume * 100)}%</span>
-              </div>
-            )}
-          </div>
+          {/* ======= 右侧控制区（包含播放模式、倍速、音量、队列） ======= */}
+          <div className="flex-1 flex justify-end items-center gap-4"> 
+            
+            {/* 1. 播放模式按钮 */}
+            <button
+              onClick={togglePlayMode}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer"
+              title={
+                playMode === 'order' ? '顺序播放' :
+                playMode === 'random' ? '随机播放' : '单曲循环'
+              }
+            >
+              {playMode === 'order' && '🔁'}
+              {playMode === 'random' && '🔀'}
+              {playMode === 'loop' && '🔂'}
+            </button>
 
-          {/* 右侧：队列按钮 */}
-          <div className="flex-1 flex justify-end">
+            {/* 2. 倍速按钮区 */}
+            <div className="relative">
+              <button
+                onClick={() => setShowRate(!showRate)}
+                className={`h-8 px-2 flex items-center justify-center rounded text-sm font-medium transition-colors cursor-pointer ${
+                  showRate ? 'bg-blue-500 text-white' : 'text-zinc-300 hover:text-white hover:bg-zinc-700'
+                }`}
+              >
+                {playbackRate}x
+              </button>
+
+              {showRate && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-20 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+                  {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((rate) => (
+                    <div
+                      key={rate}
+                      onClick={() => {
+                        setPlaybackRate(rate);
+                        setShowRate(false); 
+                      }}
+                      className={`text-center py-2 text-sm cursor-pointer transition-colors ${
+                        playbackRate === rate
+                          ? 'text-blue-400 bg-zinc-700/50 font-bold'
+                          : 'text-zinc-300 hover:bg-zinc-700'
+                      }`}
+                    >
+                      {rate}x
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 3. 音量按钮区 */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowVolume(!showVolume)}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer"
+              >
+                {isMuted || volume === 0 ? '🔇' : '🔊'}
+              </button>
+              
+              {showVolume && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-8 h-32 bg-zinc-800 border border-zinc-700 rounded-lg flex flex-col items-center py-3 shadow-2xl z-50">
+                  <div 
+                    ref={volumeBarRef}
+                    onMouseDown={handleVolumeMouseDown}
+                    className="w-1 flex-1 bg-zinc-600 rounded cursor-pointer relative"
+                  >
+                    <div 
+                      className="absolute bottom-0 w-full bg-blue-500 rounded"
+                      style={{ height: `${volume * 100}%` }}
+                    >
+                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow" />
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-zinc-400 mt-2">{Math.round(volume * 100)}%</span>
+                </div>
+              )}
+            </div>
+
+            {/* 4. 队列按钮 */}
             <button
               onClick={() => setShowQueue(!showQueue)}
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
@@ -522,7 +592,20 @@ export default function PlayerBar() {
           }
         }}
         onEnded={() => {
-          usePlayerStore.getState().nextSong();
+          if(usePlayerStore.getState().playMode === 'loop'){
+            if(audioRef.current){
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(e => console.log('重播失败',e));
+            }
+          } else{
+            usePlayerStore.getState().nextSong();
+          }
+
+        }}
+        onLoadedMetadata ={()=>{
+          if(audioRef.current){
+            audioRef.current.playbackRate = usePlayerStore.getState().playbackRate;
+          }
         }}
       />
     </footer>
