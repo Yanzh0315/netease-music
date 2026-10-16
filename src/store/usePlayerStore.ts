@@ -161,7 +161,7 @@ setPlaybackRate:(rate)=>set({playbackRate:rate}),
 setPlayMode:(mode) => set({playMode : mode}),
 }),
 {
-  name:'player-storage',
+  name:'player-storage-v2',
   partialize:(state)=>({
     currentSong:state.currentSong,
     playList:state.playList,
