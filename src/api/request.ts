@@ -2,7 +2,7 @@ import axios from "axios";
 
 const request = axios.create({
     baseURL:import.meta.env.PROD
-    ? 'https://api-enhanced-production-9ca1.up.railway.app' // 👈 换成你刚拿到的域名
+    ? 'http://120.53.5.138:3000' 
     : '/api',
     timeout:8000,
 })
