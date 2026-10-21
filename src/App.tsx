@@ -6,9 +6,11 @@ import { BrowserRouter,Routes,Route } from "react-router-dom";
 function App() {
 
   const PlaylistDetail  = React.lazy(()=>import("./pages/PlaylistDetail"))
+  const ArtistDetail  = React.lazy(()=>import("./pages/ArtistDetail"))
   const PlaylistSquare = React.lazy(()=>import("./pages/PlaylistSquare"));
   const Genre = React.lazy(()=>import("./pages/Genre")); 
   const Toplist = React.lazy(()=>import("./pages/Toplist")); 
+  const Artist = React.lazy(()=>import("./pages/Artist"))
   return (
     <BrowserRouter>
 
@@ -23,6 +25,8 @@ function App() {
           <Route path="playlist-square" element={<PlaylistSquare />} />
           <Route path="Genre" element={<Genre />} />
           <Route path="Toplist" element={<Toplist />} />
+          <Route path="Artist" element={<Artist />} />
+          <Route path="Artist/:id" element={<ArtistDetail/>}/>
         </Route>
 
       </Routes>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from 'react-router-dom';
 import request from "../api/request";
-import { usePlayerStore, type Song } from "../store/usePlayerStore"; // 👈 删掉未使用的 currentSong
+import { usePlayerStore, type Song } from "../store/usePlayerStore"; 
 import SongList from '../components/SongList'
 
 export interface SingInformation {
@@ -45,11 +45,12 @@ export default function PlaylistDetail() {
             const res: any = await request.get(`/playlist/track/all?id=${id}`)
             const formatted = res.songs.map((item: any) => ({
                 id: item.id,
-                name: item.name,
+                name: item?.name,
                 artist: item.ar?.map((a: any) => a.name).join(' ') || '未知歌手',
                 cover: item.al?.picUrl ? `${item.al.picUrl}?param=80y80` : '',
                 duration: item.dt,
-                fee: item.fee,
+                fee: item?.fee,
+                isVip:item?.fee === 1,
             }))
             setPlaylist(formatted)
         }
@@ -84,8 +85,6 @@ export default function PlaylistDetail() {
                     </div>
                 </div>
             </div>
-
-            {/* 👈 核心：把页面里的 playList 传给子组件 */}
             <SongList songs={playList} />
         </div>
     );

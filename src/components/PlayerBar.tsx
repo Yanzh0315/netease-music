@@ -254,6 +254,11 @@ export default function PlayerBar() {
               <p className="text-white text-sm truncate">{currentSong.name}</p>
               <div className="flex items-center gap-3 mt-1 text-xs">
                 <span className="text-zinc-400 truncate">{currentSong.artist}</span>
+                  {currentSong.isVip && (
+                  <span className="text-[10px] text-yellow-500/80 border border-yellow-500/60 px-1 rounded-2px scale-90 shrink-0">
+                    VIP
+                  </span>
+                  )}
                 <span
                   ref={timeRef}
                   className="text-zinc-500 font-semibold flex-shrink:0"
@@ -475,9 +480,17 @@ export default function PlayerBar() {
                       >
                         {song.name}
                       </p>
-                      <p className="text-xs text-zinc-400 mt-0.5 truncate">
-                        {song.artist}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-zinc-400 truncate">
+                          {song.artist}
+                        </p>
+                      
+                        {song.isVip && (
+                          <span className="text-[10px] text-yellow-500/80 border border-yellow-500/60 px-1 rounded-2px scale-90 shrink-0">
+                            VIP
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span className="text-xs text-zinc-500 flex-shrink:0 group-hover:opacity-0 transition-opacity">
                       {song.duration

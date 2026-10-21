@@ -10,6 +10,7 @@ export interface Song {
   duration: number; // 总时长（毫秒）
   fee: number,
   trialEnd?:number | null,
+  isVip:boolean,
 }
 export type PlayMode = 'order' | 'random' | 'loop';
 // 2. 定义 Store 的类型
@@ -20,7 +21,8 @@ interface PlayerState {
   volume:number;              //音量
   isMuted:boolean;   //是否静音   
   playbackRate:number;//音乐播放速率
-  playMode : PlayMode; //播放模式        
+  playMode : PlayMode; //播放模式      
+  likeSongs:Song[]; //收藏列表  
   setVolume:(vol:number)=>void //设置音量
   toggleMute:()=>void;        //设置静音
   playSong: (song: Song) => void;    // 切歌方法
@@ -39,6 +41,7 @@ interface PlayerState {
   setPlayList:(playList : Song[]) => void;//替换队列数据
   setPlaybackRate:(rate : number) => void; 
   setPlayMode:(mode:PlayMode) => void;
+  toggleLike:(song:Song)=>void;
 }
 // 3. 创建 store
 export const usePlayerStore = create<PlayerState>()(
@@ -52,6 +55,7 @@ export const usePlayerStore = create<PlayerState>()(
   isMuted:true,
   playbackRate:1.0,
   playMode:'order',
+  likeSongs:[],
   // 方法：播放一首新歌,并把播放的歌曲放到队列
   playSong:(song)=>{
     set({ currentSong: song, isPlaying: true, }),
@@ -159,7 +163,20 @@ setVolume : (vol) => set({volume:vol,isMuted:vol === 0}),
 toggleMute:() => set((state)=>({isMuted : ! state.isMuted})),
 setPlaybackRate:(rate)=>set({playbackRate:rate}),
 setPlayMode:(mode) => set({playMode : mode}),
+toggleLike:(song)=>set((state)=>{
+  const isExist = state.likeSongs.some((s)=>s.id === song.id);
+  if(isExist){
+    return {
+      likeSongs:state.likeSongs.filter((s)=>s.id !== song.id),
+    };
+  }else{
+    return {
+      likeSongs:[song,...state.likeSongs]
+    }
+  }
+})
 }),
+
 {
   name:'player-storage-v2',
   partialize:(state)=>({
@@ -167,7 +184,8 @@ setPlayMode:(mode) => set({playMode : mode}),
     playList:state.playList,
     volume:state.volume,
     isMuted:state.isMuted,
-    playbackRate:state.playbackRate
+    playbackRate:state.playbackRate,
+    likeSongs:state.likeSongs,
   })
 }
 ))

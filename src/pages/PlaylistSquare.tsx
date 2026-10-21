@@ -45,7 +45,6 @@ export default function PlaylistSquare() {
           name: item.name,
         }));
         setHighquality(hotListData);
-        console.log(hotListData);
       } catch (err) {
         console.error(err);
       }
