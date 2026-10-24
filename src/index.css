@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@keyframes fly-away {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  85% {
+    transform: translateY(-10px) scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.8);
+    opacity: 0;
+  }
+}

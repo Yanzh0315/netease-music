@@ -53,6 +53,7 @@ export default function Discover() {
         { label: '精选推荐', path: '/' },
         { label: '歌单广场', path: '/playlist-square' },
         { label:'歌手',path:'/artist'},
+        { label:'MV',path:'/mv'}
     ];
 
     // ==================== 核心逻辑 ====================
@@ -208,190 +209,190 @@ export default function Discover() {
     // ==================== 渲染 UI ====================
     return (
         <>
-            {/* ===== 顶部：搜索框 ===== */}
-            <div className="pt-6 pb-2 flex justify-start ml-6"> 
-                <div
-                    ref={searchWrapperRef}
-                    // 👈 1. 用 onClick 代替 onFocus，点灰色背景也能展开
-                    onClick={() => setIsFocused(true)}
-                    className="relative flex items-center bg-zinc-800 border border-zinc-700 rounded-lg transition-all duration-300 ease-in-out"
-                    // ❌ 删掉了 overflow-hidden
-                    style={{ width: isFocused ? '250px' : '150px' }}
-                >
-                    <svg className="w-4 h-4 ml-3 text-zinc-400 flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+        {/* 顶部搜索栏 */}
+        <div className="pt-4 pb-2 flex justify-start ml-8"> 
+            <div
+                ref={searchWrapperRef}
+                onClick={() => setIsFocused(true)}
+                className="relative flex items-center bg-zinc-800 border border-zinc-700 rounded-lg transition-all duration-300 ease-in-out"
+                style={{ width: isFocused ? '250px' : '200px' }}
+            >
+                <svg className="w-4 h-4 ml-4 text-zinc-400 flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
 
-                    <input
-                        type="text"
-                        placeholder="搜索歌曲"
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        onFocus={() => setIsFocused(true)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') triggerSearch(keywords);
+                <input
+                    type="text"
+                    placeholder="搜索歌曲" 
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') triggerSearch(keywords);
+                    }}
+                    className="w-full bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                />
+
+                {keywords.trim() !== '' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClear();
                         }}
-                        className="flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder-zinc-500 w-full"
-                    />
+                        className="mr-3 w-5 h-5 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-600 transition-colors cursor-pointer text-[10px] flex-shrink:0"
+                    >
+                        ✕
+                    </button>
+                )}
 
-                    {keywords.trim() !== '' && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation(); // 👈 防止点击清空按钮时触发外层 onClick
-                                handleClear();
-                            }}
-                            className="mr-2 w-4 h-4 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-600 transition-colors cursor-pointer text-[10px] flex-shrink:0"
-                        >
-                            ✕
-                        </button>
-                    )}
-
-                    {/* 历史记录浮窗 */}
-                    {isFocused && (
-                        <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute top-full left-0 w-full mt-2 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden"
-                        >
-                            {history && history.length > 0 ? (
-                                <>
-                                    <div className="flex justify-between items-center px-4 py-3 border-b border-zinc-800">
-                                        <span className="text-sm text-zinc-300 font-medium">历史搜索</span>
-                                        <button
-                                            onClick={() => setHistory([])}
-                                            className="text-zinc-500 hover:text-red-400 text-sm transition-colors"
-                                        >
-                                            清空
-                                        </button>
-                                    </div>
-                                    <div className="p-4 flex flex-wrap gap-3">
-                                        {history.map((item) => (
-                                            <span
-                                                key={item}
-                                                onClick={() => triggerSearch(item)}
-                                                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-md cursor-pointer transition-colors"
-                                            >
-                                                {item}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="p-4 text-sm text-zinc-500 text-center">
-                                    暂无搜索历史
+                {/* 历史记录浮窗 */}
+                {isFocused && (
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-full left-0 w-full mt-2 bg-zinc-800 border border-zinc-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+                    >
+                        {/* 内部内容保持你原来的不变 */}
+                        {history && history.length > 0 ? (
+                            <>
+                                <div className="flex justify-between items-center px-4 py-3 border-b border-zinc-700">
+                                    <span className="text-sm text-zinc-300 font-medium">历史搜索</span>
+                                    <button
+                                        onClick={() => setHistory([])}
+                                        className="text-zinc-500 hover:text-red-400 text-sm transition-colors"
+                                    >
+                                        清空
+                                    </button>
                                 </div>
-                            )}
+                                <div className="p-4 flex flex-wrap gap-3">
+                                    {history.map((item) => (
+                                        <span
+                                            key={item}
+                                            onClick={() => triggerSearch(item)}
+                                            className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-sm rounded-md cursor-pointer transition-colors"
+                                        >
+                                            {item}
+                                        </span>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="p-4 text-sm text-zinc-500 text-center">
+                                暂无搜索历史
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {isSearching ? (
+            /* ===== 搜索结果列表 ===== */
+            <ul className="space-y-1 mt-4">
+                {songs.map((item, index) => (
+                    <li
+                        key={item.id}
+                        className="group relative flex items-center gap-4 p-2 rounded hover:bg-zinc-800 cursor-pointer transition-colors"
+                    >
+                        <span className="w-6 text-center text-zinc-500 text-sm flex-shrink:0">{index + 1}</span>
+                        <img src={item.cover} alt={item.name} loading="lazy" onError={handleImageError} className="w-10 h-10 rounded object-cover flex-shrink:0" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm truncate">{item.name}</p>
+                            <p className="text-zinc-400 text-xs mt-0.5 truncate">{item.artist}</p>
                         </div>
-                    )}
+
+                        <div className="absolute right-4 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); playSing(item); }} className="text-zinc-400 hover:text-white transition-colors cursor-pointer" title="播放">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
+                            </button>
+                            <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    addSong({
+                                        id: item.id, name: item.name, artist: item.artist, cover: item.cover,
+                                        fee: item.fee, audioUrl: '', trialEnd: null, duration: item.duration,
+                                        isVip:item.isVip,
+                                    });
+                                }} className="text-zinc-400 hover:text-white transition-colors cursor-pointer" title="添加到队列">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <line x1="8" y1="3" x2="8" y2="13" />
+                                    <line x1="3" y1="8" x2="13" y2="8" />
+                                </svg>
+                            </button>
+                            <LikeButton song = {item}/>
+                        </div>
+                    </li>
+                ))}
+
+                {hasMore && (
+                    <li className="flex justify-center pt-4">
+                        <button
+                            onClick={() => handleSearch(page + 1, keywords)} 
+                            className="px-6 py-2 bg-zinc-800 text-zinc-300 rounded hover:bg-zinc-700 transition-colors"
+                        >
+                            加载更多
+                        </button>
+                    </li>
+                )}
+            </ul>
+        ) : (
+            /* ===== 推荐歌单视图 ===== */
+            <>
+            <div className="flex items-center justify-evenly mb-6 pb-3 border-b border-zinc-800">
+            {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                <button
+                    key={item.label}
+                    onClick={() => navigate(item.path)}
+                    // 这里不用加 gap 了，evenly 会自己算
+                    className={`text-[15px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                    isActive ? 'text-red-500 font-bold' : 'text-zinc-400 hover:text-white'
+                    }`}
+                >
+                    {item.label}
+                </button>
+                );
+            })}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                <FeatureCard title="猜你喜欢" subtitle="根据你的口味推荐" bgClass="bg-gradient-to-br from-amber-400 to-orange-500" cover={dynamicCover} onClick={handleGuessClick} />
+                <FeatureCard title="排行榜" subtitle="热门之选，潮流必备" bgClass="bg-gradient-to-br from-red-400 to-rose-600" cover="https://picsum.photos/202" onClick={() => navigate('/Toplist')} />
+                <FeatureCard title="歌单广场" subtitle="歌单潮音，一键畅享" bgClass="bg-gradient-to-br from-purple-400 to-indigo-500" cover="https://picsum.photos/203" onClick={() => navigate('/playlist-square')} />
+                <FeatureCard title="曲风" subtitle="流行、摇滚、民谣" bgClass="bg-gradient-to-br from-teal-400 to-emerald-500" cover="https://picsum.photos/202" onClick={() => navigate('/Genre')} />
+            </div>
+
+            <div className="flex items-center justify-between mb-4 mt-2">
+                <h2 className="text-white text-lg font-bold">热门歌单推荐</h2>
+                <div className="flex items-center gap-3 text-zinc-400">
+                    <button className="hover:text-white transition-colors cursor-pointer flex items-center gap-1" title="换一批">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.29l5.62 5.62"/></svg>
+                    </button>
+                    <button className="hover:text-white transition-colors cursor-pointer flex items-center gap-1" title="查看全部">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
                 </div>
             </div>
 
-            {isSearching ? (
-                /* ===== 搜索结果列表 ===== */
-                <ul className="space-y-1 mt-4">
-                    {songs.map((item, index) => (
-                        <li
-                            key={item.id}
-                            className="group relative flex items-center gap-4 p-2 rounded hover:bg-zinc-800 cursor-pointer transition-colors"
-                        >
-                            <span className="w-6 text-center text-zinc-500 text-sm flex-shrink:0">{index + 1}</span>
-                            <img src={item.cover} alt={item.name} loading="lazy" onError={handleImageError} className="w-10 h-10 rounded object-cover flex-shrink:0" />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm truncate">{item.name}</p>
-                                <p className="text-zinc-400 text-xs mt-0.5 truncate">{item.artist}</p>
-                            </div>
-
-                            <div className="absolute right-4 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={(e) => { e.stopPropagation(); playSing(item); }} className="text-zinc-400 hover:text-white transition-colors cursor-pointer" title="播放">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
-                                </button>
-                                <button onClick={(e) => {
-                                        e.stopPropagation();
-                                        addSong({
-                                            id: item.id, name: item.name, artist: item.artist, cover: item.cover,
-                                            fee: item.fee, audioUrl: '', trialEnd: null, duration: item.duration,
-                                            isVip:item.isVip,
-                                        });
-                                    }} className="text-zinc-400 hover:text-white transition-colors cursor-pointer" title="添加到队列">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <line x1="8" y1="3" x2="8" y2="13" />
-                                        <line x1="3" y1="8" x2="13" y2="8" />
-                                    </svg>
-                                </button>
-                                <LikeButton song = {item}/>
-                            </div>
-                        </li>
-                    ))}
-
-                    {hasMore && (
-                        <li className="flex justify-center pt-4">
-                            <button
-                                onClick={() => handleSearch(page + 1, keywords)} 
-                                className="px-6 py-2 bg-zinc-800 text-zinc-300 rounded hover:bg-zinc-700 transition-colors"
-                            >
-                                加载更多
-                            </button>
-                        </li>
-                    )}
-                </ul>
-            ) : (
-                /* ===== 推荐歌单视图 ===== */
-                <>
-                    <div className="flex items-center gap-8 mb-6 overflow-x-auto pb-2 border-b border-zinc-800">
-                        {navItems.map((item) => {
-                            const isActive = location.pathname === item.path;
-                            return (
-                                <button
-                                    key={item.label}
-                                    onClick={() => navigate(item.path)}
-                                    className={`text-sm font-medium transition-colors cursor-pointer flex-shrink:0 whitespace-nowrap ${
-                                        isActive ? 'text-red-500 font-bold' : 'text-zinc-400 hover:text-white'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                        <FeatureCard title="猜你喜欢" subtitle="根据你的口味推荐" bgClass="bg-gradient-to-br from-amber-400 to-orange-500" cover={dynamicCover} onClick={handleGuessClick} />
-                        <FeatureCard title="排行榜" subtitle="热门之选，潮流必备" bgClass="bg-gradient-to-br from-red-400 to-rose-600" cover="https://picsum.photos/202" onClick={() => navigate('/Toplist')} />
-                        <FeatureCard title="歌单广场" subtitle="歌单潮音，一键畅享" bgClass="bg-gradient-to-br from-purple-400 to-indigo-500" cover="https://picsum.photos/203" onClick={() => navigate('/playlist-square')} />
-                        <FeatureCard title="曲风" subtitle="流行、摇滚、民谣" bgClass="bg-gradient-to-br from-teal-400 to-emerald-500" cover="https://picsum.photos/202" onClick={() => navigate('/Genre')} />
-                    </div>
-
-                    <div className="flex items-center justify-between mb-4 mt-2">
-                        <h2 className="text-white text-lg font-bold">热门歌单推荐</h2>
-                        <div className="flex items-center gap-3 text-zinc-400">
-                            <button className="hover:text-white transition-colors cursor-pointer flex items-center gap-1" title="换一批">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.29l5.62 5.62"/></svg>
-                            </button>
-                            <button className="hover:text-white transition-colors cursor-pointer flex items-center gap-1" title="查看全部">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-                        {data?.map(item => (
-                            <Link to={`/playlist/${item.id}`} key={item.id}>
-                                <div className="group cursor-pointer">
-                                    <div className="relative rounded-lg overflow-hidden">
-                                        <img src={item.cover} alt={item.name} loading="lazy" onError={handleImageError} className="w-full aspect-square object-cover" />
-                                        <div className="absolute top-2 right-2 text-white text-[10px] bg-black/50 px-1.5 py-0.5 rounded flex items-center gap-1">🎧 {item.playCount}</div>
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                                                <svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
-                                            </div>
-                                        </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+                {data?.map(item => (
+                    <Link to={`/playlist/${item.id}`} key={item.id}>
+                        <div className="group cursor-pointer">
+                            <div className="relative rounded-lg overflow-hidden">
+                                <img src={item.cover} alt={item.name} loading="lazy" onError={handleImageError} className="w-full aspect-square object-cover" />
+                                <div className="absolute top-2 right-2 text-white text-[10px] bg-black/50 px-1.5 py-0.5 rounded flex items-center gap-1">🎧 {item.playCount}</div>
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
                                     </div>
-                                    <p className="text-xs text-zinc-300 mt-2 line-clamp-2 leading-relaxed group-hover:text-white transition-colors">{item.name}</p>
                                 </div>
-                            </Link>
-                        ))}
-                    </div>
-                </>
-            )}
+                            </div>
+                            <p className="text-xs text-zinc-300 mt-2 line-clamp-2 leading-relaxed group-hover:text-white transition-colors">{item.name}</p>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </>
+        )}
         </>
     );
 }

@@ -1,3 +1,5 @@
+import { toast } from "sonner"; 
+import { ListPlus } from "lucide-react"; 
 import { usePlayerStore, type Song } from '../store/usePlayerStore';
 import request from '../api/request';
 import { handleImageError } from '../utils/imageErrorHandler';
@@ -85,7 +87,21 @@ export default function SongList({ songs,hideTabs = false }: SongListProps) {
                             {/* 按钮组 */}
                             <div className="absolute right-4 opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity">
                                 <button onClick={(e) => { e.stopPropagation(); handlePlay(song); }} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer">▶</button>
-                                <button onClick={(e) => { e.stopPropagation(); addSong({ ...song, audioUrl: '', trialEnd: null }); }} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer">＋</button>
+                                <button 
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        addSong({ ...song, audioUrl: '', trialEnd: null }); 
+                                        
+                                        // 👇 加上这句提示
+                                        toast.success("已添加到播放队列", {
+                                            icon: <ListPlus className="w-4 h-4 text-blue-400" />,
+                                            description: song.name,
+                                        });
+                                    }} 
+                                    className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"
+                                >
+                                    ＋
+                                </button>                                
                                 <LikeButton song = {song}/>
                             </div>
                         </div>

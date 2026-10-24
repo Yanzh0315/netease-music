@@ -1,3 +1,4 @@
+import { Toaster } from "./components/ui/sonner";
 import Discover from "./pages/Discover";
 import MyMusic from "./pages/MyMusic";
 import React,{Suspense} from 'react'
@@ -11,9 +12,10 @@ function App() {
   const Genre = React.lazy(()=>import("./pages/Genre")); 
   const Toplist = React.lazy(()=>import("./pages/Toplist")); 
   const Artist = React.lazy(()=>import("./pages/Artist"))
+  const Mv = React.lazy(()=>import("./pages/Mv"))
   return (
-    <BrowserRouter>
-
+    <BrowserRouter> 
+    <Toaster position="top-center" offset="200px" richColors />
     <Suspense fallback={<div className="text-white p-8">页面加载中...</div>}>
     
       <Routes>
@@ -27,6 +29,7 @@ function App() {
           <Route path="Toplist" element={<Toplist />} />
           <Route path="Artist" element={<Artist />} />
           <Route path="Artist/:id" element={<ArtistDetail/>}/>
+          <Route path="Mv" element={<Mv/>}/>
         </Route>
 
       </Routes>
